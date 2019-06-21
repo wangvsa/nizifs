@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
     sb.partition_size = atoi(argv[1]);
     sb.entry_table_size = sb.partition_size * NIZIFS_ENTRY_RATIO;
     sb.entry_count = sb.entry_table_size * sb.block_size / sb.entry_size;
-    printf("%d %d\n", sb.entry_table_size, sb.entry_count);
     sb.data_block_start = NIZIFS_ENTRY_TABLE_BLOCK_START + sb.entry_table_size;
 
     nizifs_handle = creat(NIZI_BACKING_FILE, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
