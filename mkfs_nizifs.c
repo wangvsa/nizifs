@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "nizifs_ds.h"
+#include "nizifs.h"
 
 #define NIZIFS_ENTRY_RATIO 0.10 /* 10% of all blocks */
 #define NIZIFS_ENTRY_TABLE_BLOCK_START 1

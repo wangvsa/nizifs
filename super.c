@@ -25,9 +25,9 @@ static int nizifs_fill_super(struct super_block *sb, void *data, int silent)
 {
 	printk(KERN_INFO "nizifs: nizifs_fill_super\n");
 
-	sb->s_blocksize = SIMULA_FS_BLOCK_SIZE;
-	sb->s_blocksize_bits = SIMULA_FS_BLOCK_SIZE_BITS;
-	sb->s_magic = SIMULA_FS_TYPE;
+	sb->s_blocksize = NIZI_FS_BLOCK_SIZE;
+	sb->s_blocksize_bits = NIZI_FS_BLOCK_SIZE_BITS;
+	sb->s_magic = NIZI_FS_TYPE;
 	sb->s_type = &nizifs;                   // file_system_type
 	sb->s_op = &nizifs_sops;                // super block operations
 
