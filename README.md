@@ -2,6 +2,10 @@
 A POSIX resistant file system
 
 ### Implement a file system in kernel with a loop device as the backend
+
+![nizifs format](https://sysplay.github.io/books/LinuxDrivers/book/Images/Part18/figure_33_simula_file_system.png)
+
+
 1. Write a formating tool (mkfs_nizifs.c) to create filesystem format on a regular file
     * `./mkfs_nizifs 1024`
     * This command initialzes 1024 empty blocks and writes the self-defined superblock.
