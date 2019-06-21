@@ -5,7 +5,7 @@
 #include <linux/fs.h>           /* For system calls, structures, ... */
 #include <linux/errno.h>        /* For error codes */
 
-#include "nizifs.h"     /* For nizifs related defines, data structures, ... */
+#include "nizifs.h"             /* For nizifs related defines, data structures, ... */
 
 /*
  * Data declarations in VFS

@@ -14,6 +14,7 @@ clean:
 # kernel build system and can use its language.
 else
 
-	obj-m := super.o
+	obj-m := nizifs.o
+	nizifs-y := super.o
 
 endif
