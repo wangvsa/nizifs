@@ -14,8 +14,8 @@ A POSIX resistant file system
     * -f Find the first unused loop device
 3. Run losetup -a to check
 4. Write and compile filesystem kernel code to get the .ko module file
-5. Use insmod to load it and check with `cat /proc/filesystem` or `lsmod` or `dmesg | tail` command.
-6. Mount our file system: `mount -t sfs /dev/loop0 /some_dir`
+5. Use insmod to load it and check with `cat /proc/filesystems` or `lsmod` or `dmesg | tail` command.
+6. Mount our file system: `mount -t nizifs /dev/loop0 /some_dir`
 7. Check again with `mount` command
 8. Clean up:
     * `umount`
