@@ -15,6 +15,6 @@ clean:
 else
 
 	obj-m := nizifs.o
-	nizifs-y := super.o
+	nizifs-y := super.o file.o real_io.o
 
 endif

@@ -6,29 +6,64 @@
 #include <linux/errno.h>        /* For error codes */
 
 #include "nizifs.h"             /* For nizifs related defines, data structures, ... */
-
-/*
- * Data declarations in VFS
- * Required to implement a filesystem
- */
-static struct file_system_type nizifs;
-static struct super_operations nizifs_sops;
-static struct inode_operations nizifs_iops;
-static struct file_operations nizifs_fops;
-static struct address_space_operations nizifs_aops;
+#include "real_io.h"            /* direct access to the underlying block device */
 
 
 static struct inode *nizifs_root_inode;
+
+
+int init_nizifs_info(nizifs_info_t *info) {
+
+    int retval, i, j;
+
+    // fill in our self super block
+    if ((retval = read_sb_from_nizifs(info, &info->sb)) < 0)
+        return retval;
+
+    if (info->sb.type != NIZI_FS_TYPE) {
+        printk(KERN_ERR "Wrong magic number, this is not a nizifs partition.\n");
+        return -EINVAL;
+    }
+
+    // Mark used blocks
+    byte1_t *used_blocks = (byte1_t *)(vmalloc(info->sb.partition_size));
+    if (!used_blocks)
+        return -ENOMEM;
+    for (i = 0; i < info->sb.data_block_start; i++)
+        used_blocks[i] = 1;
+    for (i = info->sb.data_block_start; i < info->sb.partition_size; i++)
+        used_blocks[i] = 0;
+
+    nizifs_file_entry_t fe; // no need to keep after this function, so not a pointer
+    for (i = 0; i < info->sb.entry_count; i++) {
+        if( (retval = read_entry_from_nizifs(info, i, &fe) < 0 )) {
+            vfree(used_blocks); // some thing wrong, need to free used_blocks and exit;
+            return retval;
+        }
+        if (!fe.name[0]) continue;
+        for(j = 0; j < NIZI_FS_DATA_BLOCK_CNT; j++) {
+            if (fe.blocks[j] == 0) break;
+            used_blocks[fe.blocks[j]] = 1;
+        }
+    }
+
+    info->used_blocks = used_blocks;
+    info->vfs_sb->s_fs_info = info;
+    spin_lock_init(&info->lock);
+    return 0;
+}
+
+
 
 /* Called when mount the filesystem */
 static int nizifs_fill_super(struct super_block *sb, void *data, int silent)
 {
 	printk(KERN_INFO "nizifs: nizifs_fill_super\n");
 
+	sb->s_type = &nizifs;                   // file_system_type
 	sb->s_blocksize = NIZI_FS_BLOCK_SIZE;
 	sb->s_blocksize_bits = NIZI_FS_BLOCK_SIZE_BITS;
 	sb->s_magic = NIZI_FS_TYPE;
-	sb->s_type = &nizifs;                   // file_system_type
 	sb->s_op = &nizifs_sops;                // super block operations
 
 	nizifs_root_inode = iget_locked(sb, 1); // obtain an inode from VFS
@@ -86,7 +121,7 @@ static struct dentry *nizifs_mount(struct file_system_type *fs_type, int flags, 
 #endif
 
 
-static struct file_system_type nizifs =
+struct file_system_type nizifs =
 {
 	name: "nizifs", /* Name of our file system */
     #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38))
