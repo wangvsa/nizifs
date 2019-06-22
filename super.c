@@ -60,6 +60,23 @@ static void free_nizifs_info(nizifs_info_t *info) {
         vfree(info->used_blocks);
 }
 
+// TODO: when is this called?
+static void nizifs_put_super(struct super_block *sb) {
+    nizifs_info_t *info = (nizifs_info_t *)(sb->s_fs_info);
+    printk(KERN_INFO "nizifs: nizifs_put_super\n");
+    if (info) {
+        free_nizifs_info(info);
+        kfree(info);
+        sb->s_fs_info = NULL;
+    }
+}
+
+const struct super_operations nizifs_sops = {
+    put_super: nizifs_put_super,
+    //statfs: nizifs_statfs     /* for df to show it up */
+    //write_inode: nizifs_write_inode
+};
+
 
 
 /* Called when mount the filesystem */
