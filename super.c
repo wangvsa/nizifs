@@ -4,6 +4,7 @@
 #include <linux/version.h>      /* For LINUX_VERSION_CODE & KERNEL_VERSION */
 #include <linux/fs.h>           /* For system calls, structures, ... */
 #include <linux/errno.h>        /* For error codes */
+#include <linux/slab.h>         /* For kzalloc, kfree, ... */
 
 #include "nizifs.h"             /* For nizifs related defines, data structures, ... */
 #include "real_io.h"            /* direct access to the underlying block device */
@@ -12,9 +13,11 @@
 static struct inode *nizifs_root_inode;
 
 
-int init_nizifs_info(nizifs_info_t *info) {
+static int init_nizifs_info(nizifs_info_t *info) {
 
     int retval, i, j;
+    byte1_t *used_blocks;
+    nizifs_file_entry_t fe; // no need to keep after this function, so not a pointer
 
     // fill in our self super block
     if ((retval = read_sb_from_nizifs(info, &info->sb)) < 0)
@@ -26,7 +29,7 @@ int init_nizifs_info(nizifs_info_t *info) {
     }
 
     // Mark used blocks
-    byte1_t *used_blocks = (byte1_t *)(vmalloc(info->sb.partition_size));
+    used_blocks = (byte1_t *)(vmalloc(info->sb.partition_size));
     if (!used_blocks)
         return -ENOMEM;
     for (i = 0; i < info->sb.data_block_start; i++)
@@ -34,7 +37,6 @@ int init_nizifs_info(nizifs_info_t *info) {
     for (i = info->sb.data_block_start; i < info->sb.partition_size; i++)
         used_blocks[i] = 0;
 
-    nizifs_file_entry_t fe; // no need to keep after this function, so not a pointer
     for (i = 0; i < info->sb.entry_count; i++) {
         if( (retval = read_entry_from_nizifs(info, i, &fe) < 0 )) {
             vfree(used_blocks); // some thing wrong, need to free used_blocks and exit;
@@ -53,35 +55,51 @@ int init_nizifs_info(nizifs_info_t *info) {
     return 0;
 }
 
+static void free_nizifs_info(nizifs_info_t *info) {
+    if (info->used_blocks)
+        vfree(info->used_blocks);
+}
+
 
 
 /* Called when mount the filesystem */
-static int nizifs_fill_super(struct super_block *sb, void *data, int silent)
-{
-	printk(KERN_INFO "nizifs: nizifs_fill_super\n");
+static int nizifs_fill_super(struct super_block *sb, void *data, int silent) {
+    nizifs_info_t *info;
 
+	printk(KERN_INFO "nizifs: nizifs_fill_super\n");
+    if (!(info = (nizifs_info_t *)(kzalloc(sizeof(nizifs_info_t), GFP_KERNEL))))
+        return -ENOMEM;
+    info->vfs_sb = sb;
+
+    if (init_nizifs_info(info) < 0) {
+        kfree(info);
+        return -EIO;
+    }
+
+
+    /* Fill the VFS super block */
+    sb->s_magic = info->sb.type;            // magic number
 	sb->s_type = &nizifs;                   // file_system_type
 	sb->s_blocksize = NIZI_FS_BLOCK_SIZE;
 	sb->s_blocksize_bits = NIZI_FS_BLOCK_SIZE_BITS;
-	sb->s_magic = NIZI_FS_TYPE;
 	sb->s_op = &nizifs_sops;                // super block operations
 
 	nizifs_root_inode = iget_locked(sb, 1); // obtain an inode from VFS
-	if (!nizifs_root_inode)
-	{
+	if (!nizifs_root_inode) {
+        free_nizifs_info(info);
+        kfree(info);
 		return -EACCES;
-	}
-	if (nizifs_root_inode->i_state & I_NEW) // allocated fresh now
-	{
+    }
+
+	if (nizifs_root_inode->i_state & I_NEW) {   // allocated fresh now
 		printk(KERN_INFO "nizifs: Got new root inode, let's fill in\n");
 		nizifs_root_inode->i_op = &nizifs_iops; // inode operations
 		nizifs_root_inode->i_mode = S_IFDIR | S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
-		nizifs_root_inode->i_fop = &nizifs_fops; // file operations
+		nizifs_root_inode->i_fop = &nizifs_fops;// file operations
 		nizifs_root_inode->i_mapping->a_ops = &nizifs_aops; // address operations
 		unlock_new_inode(nizifs_root_inode);
 	}
-	else
-	{
+	else {
 		printk(KERN_INFO "nizifs: Got root inode from inode cache\n");
 	}
 
@@ -90,9 +108,10 @@ static int nizifs_fill_super(struct super_block *sb, void *data, int silent)
     #else
 	sb->s_root = d_make_root(nizifs_root_inode);
     #endif
-	if (!sb->s_root)
-	{
+	if (!sb->s_root) {
 		iget_failed(nizifs_root_inode);
+        free_nizifs_info(info);
+        kfree(info);
 		return -ENOMEM;
 	}
 
@@ -133,14 +152,12 @@ struct file_system_type nizifs =
 	owner: THIS_MODULE
 };
 
-static int __init nizifs_init(void)
-{
+static int __init nizifs_init(void) {
 	int err = register_filesystem(&nizifs);
 	return err;
 }
 
-static void __exit nizifs_exit(void)
-{
+static void __exit nizifs_exit(void) {
 	unregister_filesystem(&nizifs);
 }
 

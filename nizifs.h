@@ -51,6 +51,21 @@ typedef struct nizifs_info {
 } nizifs_info_t;
 #endif
 
+/*
+ * Inode number 0 is not treated as a valid inode number at many places,
+ * including applications like ls. So, the inode numbering should start
+ * at not less than 1. For example, making root inode's number 0, leads
+ * the lookuped entries . & .. to be not shown in ls
+ */
+#define ROOT_INODE_NUM (1)
+#define N2V_INODE_NUM(i) (ROOT_INODE_NUM + 1 + (i))     // NIZIFS to VFS
+#define V2N_INODE_NUM(i) ((i) - (ROOT_INODE_NUM + 1))   // NIZIFS to SFSk
+#define INV_INODE (-1)
+#define INV_BLOCK (-1)
+
+
+
+
 
 /*
  * Data declarations in VFS
@@ -73,3 +88,4 @@ extern const struct address_space_operations nizifs_nobh_aops;
 
 
 #endif
+

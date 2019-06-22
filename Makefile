@@ -16,5 +16,6 @@ else
 
 	obj-m := nizifs.o
 	nizifs-y := super.o file.o real_io.o
+	#ccflags-y += -std=c99
 
 endif
