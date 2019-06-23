@@ -61,8 +61,51 @@ static int nizifs_inode_create(struct inode *parent_inode, struct dentry *dentry
     return 0;
 }
 
+// TODO: Need to understand this, especially dentry
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0))
+static struct dentry *nizifs_inode_lookup(struct inode *parent_inode, struct dentry *dentry, struct nameidata *nameidata)
+#else
+static struct dentry *nizifs_inode_lookup(struct inode *parent_inode, struct dentry *dentry, unsigned intflags)
+#endif
+{
+    nizifs_info_t *info = (nizifs_info_t *)(parent_inode->i_sb->s_fs_info);
+    char fn[dentry->d_name.len + 1];
+    int ino;
+    nizifs_file_entry_t fe;
+    struct inode *file_inode = NULL;
+
+    printk(KERN_INFO "nizifs: nizifs_inode_lookup\n");
+
+    if (parent_inode->i_ino != nizifs_root_inode->i_ino)
+        return ERR_PTR(-ENOENT);
+    strncpy(fn, dentry->d_name.name, dentry->d_name.len);
+    fn[dentry->d_name.len] = 0;
+    if ((ino = nizifs_lookup_file(info, fn, &fe)) == INV_INODE)
+        return d_splice_alias(file_inode, dentry);    // Possibly create a new one
+
+    file_inode = iget_locked(parent_inode->i_sb, ino);
+    if (!file_inode)
+        return ERR_PTR(-EACCES);
+    if (file_inode->i_state & I_NEW) {
+        printk(KERN_INFO "nizifs: Got new VFS inode for #%d\n", ino);
+        file_inode->i_size = fe.size;
+        file_inode->i_mode = S_IFREG;
+        file_inode->i_mode |= ((fe.perms & 4) ? S_IRUSR|S_IRGRP|S_IROTH : 0);
+        file_inode->i_mode |= ((fe.perms & 2) ? S_IWUSR|S_IWGRP|S_IWOTH : 0);
+        file_inode->i_mode |= ((fe.perms & 1) ? S_IXUSR|S_IXGRP|S_IXOTH : 0);
+        file_inode->i_mapping->a_ops = &nizifs_aops;
+        file_inode->i_fop = &nizifs_fops;
+        unlock_new_inode(file_inode);
+    } else {
+        printk(KERN_INFO "nizifs: Got VFS inode from inode cache");
+    }
+    d_add(dentry, file_inode);
+    return NULL;
+}
+
+
 const struct inode_operations nizifs_iops = {
-    create: nizifs_inode_create
+    create: nizifs_inode_create,
     //ulink: nizifs_inode_unlink,
-    //lookup: nizifs_inode_lookup
+    lookup: nizifs_inode_lookup
 };

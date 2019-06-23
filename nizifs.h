@@ -72,6 +72,7 @@ typedef struct nizifs_info {
  * Required to implement a filesystem
  */
 /* super.c */
+extern struct inode* nizifs_root_inode;
 extern struct file_system_type nizifs;
 extern const struct super_operations nizifs_sops;
 
