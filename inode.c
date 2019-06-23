@@ -103,9 +103,27 @@ static struct dentry *nizifs_inode_lookup(struct inode *parent_inode, struct den
     return NULL;
 }
 
+static int nizifs_inode_unlink(struct inode *parent_inode, struct dentry *dentry) {
+
+    nizifs_info_t *info = (nizifs_info_t *)(parent_inode->i_sb->s_fs_info);
+    char fn[dentry->d_name.len + 1];
+    int ino;
+    struct inode *file_inode = dentry->d_inode;
+
+    printk(KERN_INFO "nizifs: nizifs_inode_unlink\n");
+
+    strncpy(fn, dentry->d_name.name, dentry->d_name.len);
+    fn[dentry->d_name.len] = 0;
+
+    if ((ino = nizifs_remove_file(info, fn)) == INV_INODE)
+        return -EINVAL;
+
+    inode_dec_link_count(file_inode);
+    return 0;
+}
 
 const struct inode_operations nizifs_iops = {
     create: nizifs_inode_create,
-    //ulink: nizifs_inode_unlink,
+    unlink: nizifs_inode_unlink,
     lookup: nizifs_inode_lookup
 };

@@ -10,6 +10,7 @@
 #include "real_io.h"            /* direct access to the underlying block device */
 
 
+struct inode *nizifs_root_inode;
 
 static int init_nizifs_info(nizifs_info_t *info) {
 
