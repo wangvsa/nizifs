@@ -103,4 +103,75 @@ int nizifs_update(nizifs_info_t *info, int vfs_ino, int *size, int *timestamp, i
 }
 
 
+int nizifs_create_file(nizifs_info_t *info, char *fn, int perms, nizifs_file_entry_t *fe) {
+    int ino, free_ino, i;
+    free_ino = INV_INODE;
+
+    // Get a free ino to assign
+    for (ino = 0; ino < info->sb.entry_count; ino++) {
+        if (read_entry_from_nizifs(info, ino, fe) < 0)
+            return INV_INODE;
+        if (!fe->name[0]) {
+            free_ino = ino;
+            break;
+        }
+    }
+
+    if (free_ino == INV_INODE) {
+        printk(KERN_ERR "No entries left\n");
+        return INV_INODE;
+    }
+
+    strncpy(fe->name, fn, NIZI_FS_FILENAME_LEN);
+    fe->name[NIZI_FS_FILENAME_LEN] = 0;
+    fe->size = 0;
+    fe->timestamp = get_seconds();
+    fe->perms = perms;
+
+    for (i = 0; i < NIZI_FS_DATA_BLOCK_CNT; i++)
+        fe->blocks[i] = 0;
+
+    // Write the entry to block device
+    if (write_entry_to_nizifs(info, free_ino, fe) < 0)
+        return INV_INODE;
+
+    return N2V_INODE_NUM(free_ino);
+}
+
+// TODO: This could be slow
+int nizifs_lookup_file(nizifs_info_t *info, char *fn, nizifs_file_entry_t *fe) {
+    int ino;
+    for (ino = 0; ino < info->sb.entry_count; ino++) {
+        if (read_entry_from_nizifs(info, ino, fe) < 0)
+            return INV_INODE;
+        if (!fe->name[0]) continue;
+        // Find it
+        if (strcmp(fe->name, fn) == 0)
+            return N2V_INODE_NUM(ino);
+    }
+    return INV_INODE;
+}
+
+int nizifs_remove_file(nizifs_info_t *info, char *fn) {
+    int vfs_ino, i;
+    nizifs_file_entry_t fe;
+
+    if ((vfs_ino = nizifs_lookup_file(info, fn, &fe)) == INV_INODE) {
+        printk(KERN_ERR "File %s doesn't exist\n", fn);
+        return INV_INODE;
+    }
+
+    // Free up all allocated blocks
+    for (i = 0; i < NIZI_FS_DATA_BLOCK_CNT; i++) {
+        if (!fe.blocks[i])
+            break;
+        nizifs_unset_data_block(info, fe.blocks[i]);
+    }
+
+    // Write the empty file entry back
+    memset(&fe, 0, sizeof(nizifs_file_entry_t));
+    if (write_entry_to_nizifs(info, V2N_INODE_NUM(vfs_ino), &fe) < 0)
+        return INV_INODE;
+    return vfs_ino;
+}
 

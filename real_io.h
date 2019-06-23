@@ -7,4 +7,8 @@ int read_entry_from_nizifs(nizifs_info_t *info, int ino, nizifs_file_entry_t *fe
 
 int nizifs_update(nizifs_info_t *info, int vfs_ino, int *size, int *timestamp, int *perms);
 
+
+int nizifs_create_file(nizifs_info_t *info, char *fn, int perms, nizifs_file_entry_t *fe);
+int nizifs_remove_file(nizifs_info_t *info, char *fn);
+
 #endif

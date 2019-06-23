@@ -15,7 +15,7 @@ clean:
 else
 
 	obj-m := nizifs.o
-	nizifs-y := super.o file.o real_io.o
+	nizifs-y := super.o file.o real_io.o inode.o
 	#ccflags-y += -std=c99
 
 endif

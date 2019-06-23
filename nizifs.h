@@ -11,8 +11,8 @@
 #define NIZI_FS_BLOCK_SIZE 512          /* in bytes */
 #define NIZI_FS_ENTRY_SIZE 64           /* in bytes */
 #define NIZI_FS_BLOCK_SIZE_BITS 9       /* log(SIMULA_FS_BLOCK_SIZE) w/ base 2 */
-#define NIZI_FS_FILENAME_LEN 16         /* so max length is 15 */
-#define NIZI_FS_DATA_BLOCK_CNT ((NIZI_FS_ENTRY_SIZE - (NIZI_FS_FILENAME_LEN + 3 * 4)) / 4)
+#define NIZI_FS_FILENAME_LEN 15         /* so max length is 15 */
+#define NIZI_FS_DATA_BLOCK_CNT ((NIZI_FS_ENTRY_SIZE - (NIZI_FS_FILENAME_LEN + 1 + 3 * 4)) / 4)
 
 #define NIZI_BACKING_FILE ".nizifs.img"
 
@@ -35,7 +35,7 @@ typedef struct nizifs_super_block
 
 typedef struct nizifs_file_entry
 {
-    char name[NIZI_FS_FILENAME_LEN];
+    char name[NIZI_FS_FILENAME_LEN+1];
     byte4_t size;                       /* in bytes */
     byte4_t timestamp;                  /* Seconds since Epoch */
     byte4_t perms;                      /* Permissions for user */
@@ -76,12 +76,12 @@ extern struct file_system_type nizifs;
 extern const struct super_operations nizifs_sops;
 
 /* file.c */
-extern const struct inode_operations nizifs_iops;
 extern const struct file_operations nizifs_fops;
 extern const struct file_operations nizifs_dops;
 
 /* inode.c */
 //extern void ext2_set_file_ops(struct inode *inode);
+extern const struct inode_operations nizifs_iops;
 extern const struct address_space_operations nizifs_aops;
 extern const struct address_space_operations nizifs_nobh_aops;
 //extern const struct iomap_ops ext2_iomap_ops;
