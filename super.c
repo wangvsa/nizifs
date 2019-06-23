@@ -60,7 +60,9 @@ static void free_nizifs_info(nizifs_info_t *info) {
         vfree(info->used_blocks);
 }
 
-// TODO: when is this called?
+/* TODO: when is this called?
+ * Seems to be called to clean up
+ */
 static void nizifs_put_super(struct super_block *sb) {
     nizifs_info_t *info = (nizifs_info_t *)(sb->s_fs_info);
     printk(KERN_INFO "nizifs: nizifs_put_super\n");
@@ -71,10 +73,34 @@ static void nizifs_put_super(struct super_block *sb) {
     }
 }
 
+static int nizifs_write_inode(struct inode *inode, struct writeback_control *wbc) {
+    nizifs_info_t *info = (nizifs_info_t *)(inode->i_sb->s_fs_info);
+    int size, timestamp, perms;
+    printk(KERN_INFO "nizifs: nizifs_write_inode (i_no = %ld)\n", inode->i_ino);
+
+    if (!(S_ISREG(inode->i_mode)))  // currently we only handle regular files
+        return 0;
+
+    size = i_size_read(inode);
+
+    // Set timestamp in our filesystem
+    timestamp = inode->i_mtime.tv_sec > inode->i_ctime.tv_sec ? inode->i_mtime.tv_sec : inode->i_ctime.tv_sec;
+
+    // Set file's permission in our filesystem
+    perms = 0;
+    perms |= (inode->i_mode & (S_IRUSR | S_IRGRP | S_IROTH)) ? 4 : 0;
+    perms |= (inode->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)) ? 2 : 0;
+    perms |= (inode->i_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ? 2 : 0;
+
+    printk(KERN_INFO "nizifs: nizifs_write_inode with %d bytes, perm %o\n", size, perms);
+
+    return nizifs_update(info, inode->i_ino, &size, &timestamp, &perms);
+}
+
 const struct super_operations nizifs_sops = {
     put_super: nizifs_put_super,
     //statfs: nizifs_statfs     /* for df to show it up */
-    //write_inode: nizifs_write_inode
+    write_inode: nizifs_write_inode
 };
 
 
