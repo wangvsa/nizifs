@@ -166,7 +166,11 @@ const struct file_operations nizifs_fops = {
     fsync: noop_fsync
     #endif
 };
-
+/*
+ * When fill an VFS inode
+ * Use nizifs_dops if its a directory
+ * Use nizifs_fops if its a regular file
+ */
 const struct file_operations nizifs_dops = {
     #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0))
     readdir: nizifs_readdir

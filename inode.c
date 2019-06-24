@@ -127,6 +127,6 @@ static int nizifs_inode_unlink(struct inode *parent_inode, struct dentry *dentry
 
 const struct inode_operations nizifs_iops = {
     create: nizifs_inode_create,        /* called by the open(2) and creat(2) system calls */
-    unlink: nizifs_inode_unlink,
-    lookup: nizifs_inode_lookup
+    unlink: nizifs_inode_unlink,        /* called by the unlink(2) system call, also rm ? */
+    lookup: nizifs_inode_lookup         /* called when the VFS needs to look up an inode in a parent directory, e.g. ls, cd, ... */
 };

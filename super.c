@@ -136,7 +136,7 @@ static int nizifs_fill_super(struct super_block *sb, void *data, int silent) {
 		printk(KERN_INFO "nizifs: Got new root inode, let's fill in\n");
 		nizifs_root_inode->i_op = &nizifs_iops; // inode operations
 		nizifs_root_inode->i_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
-		nizifs_root_inode->i_fop = &nizifs_fops;    // file operations
+		nizifs_root_inode->i_fop = &nizifs_dops;    // file operations for directory
 		nizifs_root_inode->i_mapping->a_ops = &nizifs_aops; // address operations
 		unlock_new_inode(nizifs_root_inode);
 	}
