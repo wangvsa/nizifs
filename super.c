@@ -89,7 +89,7 @@ static int nizifs_write_inode(struct inode *inode, struct writeback_control *wbc
     perms = 0;
     perms |= (inode->i_mode & (S_IRUSR | S_IRGRP | S_IROTH)) ? 4 : 0;
     perms |= (inode->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)) ? 2 : 0;
-    perms |= (inode->i_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ? 2 : 0;
+    perms |= (inode->i_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) ? 1 : 0;
 
     printk(KERN_INFO "nizifs: nizifs_write_inode with %d bytes, perm %o\n", size, perms);
 
@@ -97,9 +97,9 @@ static int nizifs_write_inode(struct inode *inode, struct writeback_control *wbc
 }
 
 const struct super_operations nizifs_sops = {
-    put_super: nizifs_put_super,
-    //statfs: nizifs_statfs     /* for df to show it up */
-    write_inode: nizifs_write_inode
+    put_super: nizifs_put_super,        /* called when the VFS wishes to free the superblock (i.e. unmount) */
+    //statfs: nizifs_statfs             /* for df to show it up */
+    write_inode: nizifs_write_inode     /* called when the VFS needs to write an inode to disc */
 };
 
 

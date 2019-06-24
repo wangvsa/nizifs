@@ -90,9 +90,12 @@ static struct dentry *nizifs_inode_lookup(struct inode *parent_inode, struct den
         printk(KERN_INFO "nizifs: Got new VFS inode for #%d\n", ino);
         file_inode->i_size = fe.size;
         file_inode->i_mode = S_IFREG;
-        file_inode->i_mode |= ((fe.perms & 4) ? S_IRUSR|S_IRGRP|S_IROTH : 0);
-        file_inode->i_mode |= ((fe.perms & 2) ? S_IWUSR|S_IWGRP|S_IWOTH : 0);
-        file_inode->i_mode |= ((fe.perms & 1) ? S_IXUSR|S_IXGRP|S_IXOTH : 0);
+        //file_inode->i_mode |= ((fe.perms & 4) ? S_IRUSR|S_IRGRP|S_IROTH : 0);
+        //file_inode->i_mode |= ((fe.perms & 2) ? S_IWUSR|S_IWGRP|S_IWOTH : 0);
+        //file_inode->i_mode |= ((fe.perms & 1) ? S_IXUSR|S_IXGRP|S_IXOTH : 0);
+
+        file_inode->i_mode |= (S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH|S_IXUSR|S_IXGRP|S_IXOTH);
+
         file_inode->i_mapping->a_ops = &nizifs_aops;
         file_inode->i_fop = &nizifs_fops;
         unlock_new_inode(file_inode);
@@ -123,7 +126,7 @@ static int nizifs_inode_unlink(struct inode *parent_inode, struct dentry *dentry
 }
 
 const struct inode_operations nizifs_iops = {
-    create: nizifs_inode_create,
+    create: nizifs_inode_create,        /* called by the open(2) and creat(2) system calls */
     unlink: nizifs_inode_unlink,
     lookup: nizifs_inode_lookup
 };
