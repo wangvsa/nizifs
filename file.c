@@ -145,6 +145,7 @@ static int nizifs_write_begin(struct file *file, struct address_space *mapping,
 const struct file_operations nizifs_fops = {
     open: generic_file_open,
     release: nizifs_file_release,
+    llseek: generic_file_llseek,
     #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,16,0))
     read: do_sync_read,
     write: do_sync_write,
