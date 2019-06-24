@@ -164,7 +164,8 @@ const struct file_operations nizifs_fops = {
     #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35))
     fsync: simple_sync_file
     #else
-    fsync: noop_fsync
+    //fsync: noop_fsync
+    fsync: generic_file_fsync
     #endif
 };
 /*
