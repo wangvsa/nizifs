@@ -69,7 +69,7 @@ static int nizifs_iterate(struct file *file, struct dir_context *ctx) {
         if (ctx->pos == pos) {
             if (!dir_emit(ctx, fe.name, strlen(fe.name), N2V_INODE_NUM(ino), DT_REG))
                 return -ENOSPC;
-            file->f_pos++;
+            ctx->pos++;
         }
     }
     return 0;
@@ -173,9 +173,9 @@ const struct file_operations nizifs_fops = {
  */
 const struct file_operations nizifs_dops = {
     #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,11,0))
-    readdir: nizifs_readdir
+    readdir: nizifs_readdir         /* called when the VFS needs to read the directory contents */
     #else
-    iterate: nizifs_iterate
+    iterate: nizifs_iterate         /* called when the VFS needs to read the directory contents */
     #endif
 };
 
