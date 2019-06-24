@@ -96,7 +96,7 @@ static int nizifs_get_block(struct inode *inode, sector_t iblock, struct buffer_
     struct super_block *sb = inode->i_sb;
     nizifs_info_t *info = (nizifs_info_t *)(sb->s_fs_info);
     nizifs_file_entry_t fe;
-    sector_t phys;      // TODO: What's this
+    sector_t phys;      // indexing onto the disc partition, i.e. our data block index
     int retval;
 
     printk(KERN_INFO "nizifs: nizifs_get_block called for I: %ld, B: %llu, C: %d\n",
