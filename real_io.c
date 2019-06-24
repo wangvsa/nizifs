@@ -102,6 +102,10 @@ int nizifs_update(nizifs_info_t *info, int vfs_ino, int *size, int *timestamp, i
     return write_entry_to_nizifs(info, V2N_INODE_NUM(vfs_ino), &fe);
 }
 
+int nizifs_update_file_entry(nizifs_info_t *info, int vfs_ino, nizifs_file_entry_t *fe) {
+    return write_entry_to_nizifs(info, V2N_INODE_NUM(vfs_ino), fe);
+}
+
 
 int nizifs_create_file(nizifs_info_t *info, char *fn, int perms, nizifs_file_entry_t *fe) {
     int ino, free_ino, i;

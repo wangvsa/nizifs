@@ -4,8 +4,10 @@
 int read_sb_from_nizifs(nizifs_info_t *info, nizifs_super_block_t *sb);
 
 int read_entry_from_nizifs(nizifs_info_t *info, int ino, nizifs_file_entry_t *fe);
+int read_entry_with_vfs_ino(nizifs_info_t *info, int vfs_ino, nizifs_file_entry_t *fe);
 
 int nizifs_update(nizifs_info_t *info, int vfs_ino, int *size, int *timestamp, int *perms);
+int nizifs_update_file_entry(nizifs_info_t *info, int vfs_ino, nizifs_file_entry_t *fe);
 
 
 int nizifs_lookup_file(nizifs_info_t *info, char *fn, nizifs_file_entry_t *fe);

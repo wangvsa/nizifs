@@ -79,14 +79,10 @@ extern const struct super_operations nizifs_sops;
 /* file.c */
 extern const struct file_operations nizifs_fops;
 extern const struct file_operations nizifs_dops;
+extern const struct address_space_operations nizifs_aops;
 
 /* inode.c */
-//extern void ext2_set_file_ops(struct inode *inode);
 extern const struct inode_operations nizifs_iops;
-extern const struct address_space_operations nizifs_aops;
-extern const struct address_space_operations nizifs_nobh_aops;
-//extern const struct iomap_ops ext2_iomap_ops;
-
 
 #endif
 
