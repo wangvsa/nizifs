@@ -43,7 +43,9 @@ static int nizifs_inode_create(struct inode *parent_inode, struct dentry *dentry
     }
     file_inode->i_ino = ino;
     file_inode->i_size = fe.size;
-    file_inode->i_mode = S_IFREG | mode;
+    //file_inode->i_mode = S_IFREG | mode;
+    file_inode->i_mode = S_IFREG;
+    file_inode->i_mode |= (S_IRUSR|S_IRGRP|S_IROTH|S_IWUSR|S_IWGRP|S_IWOTH|S_IXUSR|S_IXGRP|S_IXOTH);
     file_inode->i_mapping->a_ops = &nizifs_aops;
     file_inode->i_fop = &nizifs_fops;
 
